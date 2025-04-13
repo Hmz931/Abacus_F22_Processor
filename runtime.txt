@@ -1,1 +1,1 @@
-python-3.11.8  # Version spécifique compatible
+python-3.11.8
