@@ -3,4 +3,4 @@ pandas==1.3.3
 openpyxl==3.0.9
 xlsxwriter==3.0.2
 gunicorn==20.1.0
-numpy==1.26.4  # Version pré-compilée plus stable
+numpy==1.26.4; python_version >= '3.8'

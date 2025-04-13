@@ -1,10 +1,10 @@
 #!/bin/bash
 set -o errexit
 
-# Installer les dépendances système nécessaires
+# Install system dependencies
 apt-get update
-apt-get install -y python3-dev gcc
+apt-get install -y python3-dev gcc libpq-dev
 
-# Installer les dépendances Python
-pip install --upgrade pip
-pip install -r requirements.txt
+# Upgrade pip and install Python packages
+python -m pip install --upgrade pip
+pip install --no-cache-dir -r requirements.txt
