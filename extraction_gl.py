@@ -404,7 +404,7 @@ def analyser_comptes(gl_consolide, fichier_input, fichier_output="soldes_par_feu
     return df_resultats
 
 if __name__ == "__main__":
-    fichier_input = '2023_GL_NEUROSOFT B. SA.xlsx'
+    fichier_input = '2023_GL_NS.xlsx'
     fichier_output = 'Grand_Livre_Consolidé.xlsx'
 
     gl_consolide = consolider_gl(fichier_input, fichier_output)
