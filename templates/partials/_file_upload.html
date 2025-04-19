@@ -1,0 +1,19 @@
+<form id="upload-form">
+    <div class="upload-area py-5" id="drop-area">
+        <i class="bi bi-cloud-arrow-up fs-1 text-muted mb-3"></i>
+        <p class="mb-2">Glissez-déposez votre fichier Excel ici</p>
+        <p class="small text-muted mb-3">Formats acceptés: .xlsx</p>
+        <input type="file" id="file-input" name="file" accept=".xlsx" class="d-none">
+        <button type="button" class="btn btn-primary px-4" onclick="document.getElementById('file-input').click()">
+            <i class="bi bi-folder2-open me-2"></i>Parcourir
+        </button>
+        <p class="mt-3 mb-0" id="file-name">
+            <span class="badge bg-light text-dark"><i class="bi bi-file-earmark-excel me-1"></i>Aucun fichier sélectionné</span>
+        </p>
+    </div>
+    <div class="d-grid mt-3">
+        <button type="submit" class="btn btn-success btn-lg" id="submit-btn">
+            <i class="bi bi-gear-wide-connected me-2"></i>Lancer le traitement
+        </button>
+    </div>
+</form>

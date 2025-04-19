@@ -57,6 +57,66 @@ CATEGORIES_RESULTAT = {
     'Clôture et régularisations': ['9']
 }
 
+# === RATIOS FINANCIERS ===
+RATIOS = {
+    'Liquidité': {
+        'Liquidité générale': {
+            'numérateur': ['10', '11', '12', '13', '14'],
+            'dénominateur': ['20', '21', '22', '23'],
+            'seuil': 1.5
+        },
+        'Liquidité immédiate': {
+            'numérateur': ['10', '11'],
+            'dénominateur': ['20', '21', '22', '23'],
+            'seuil': 0.8
+        }
+    },
+    'Rentabilité': {
+        'Marge bénéficiaire nette': {
+            'numérateur': ['990'],
+            'dénominateur': ['3'],
+            'seuil': 0.1
+        },
+        'ROE': {
+            'numérateur': ['990'],
+            'dénominateur': ['28'],
+            'seuil': 0.15
+        },
+        'ROA': {
+            'numérateur': ['990'],
+            'dénominateur': ['1'],
+            'seuil': 0.05
+        }
+    },
+    'Solvabilité': {
+        'Endettement total': {
+            'numérateur': ['20', '21', '22', '23', '24', '25', '26'],
+            'dénominateur': ['1'],
+            'seuil': 0.7,
+            'inverse': True
+        },
+        'Autonomie financière': {
+            'numérateur': ['28'],
+            'dénominateur': ['2'],
+            'seuil': 0.3
+        }
+    },
+    'Activité': {
+        'Rotation des stocks': {
+            'numérateur': ['40'],
+            'dénominateur': ['12'],
+            'seuil': 6
+        },
+        'Délai recouvrement': {
+            'numérateur': ['11'],
+            'dénominateur': ['3'],
+            'multiplicateur': 360,
+            'seuil': 90,
+            'unité': 'jours'
+        }
+    }
+}
+
 # === FONCTIONS ===
 
 def charger_donnees():

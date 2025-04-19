@@ -7,12 +7,12 @@ import pandas as pd
 from threading import Thread
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'xlsx'}
 app.secret_key = os.urandom(24)
 
-# État global du traitement
+# Global processing status
 processing_status = {
     'current': 0,
     'total': 0,
@@ -28,31 +28,31 @@ def allowed_file(filename):
 def background_processing(filepath):
     global processing_status
     try:
-        # Étape 1: Compter les feuilles
+        # Step 1: Count sheets
         with pd.ExcelFile(filepath) as xls:
             total_sheets = len(xls.sheet_names)
         
         processing_status['total'] = total_sheets
-        processing_status['message'] = 'Début de la consolidation...'
+        processing_status['message'] = 'Analyse de la structure du fichier...'
         
-        # Étape 2: Consolidation du grand livre
+        # Step 2: Consolidate GL
         processing_status['message'] = 'Consolidation du grand livre...'
         gl_consolide = consolider_gl(filepath, "Grand_Livre_Consolidé.xlsx")
         processing_status['current'] = total_sheets // 3
         
-        # Étape 3: Analyse des comptes
-        processing_status['message'] = 'Analyse des comptes...'
+        # Step 3: Analyze accounts
+        processing_status['message'] = 'Analyse des soldes comptables...'
         df_soldes = analyser_comptes(gl_consolide, filepath, "soldes_par_feuille.xlsx")
         processing_status['current'] = total_sheets // 3 * 2
         
-        # Étape 4: États financiers
+        # Step 4: Financial statements
         processing_status['message'] = 'Génération des états financiers...'
         df = charger_donnees()
         bilan, bilan_details = generer_bilan(df)
         resultat, resultat_details = generer_compte_resultat(df)
         exporter_rapports(bilan, resultat, bilan_details, resultat_details)
         
-        # Finalisation
+        # Finalize
         processing_status['current'] = total_sheets
         processing_status['message'] = 'Traitement terminé avec succès!'
         processing_status['completed'] = True
@@ -81,7 +81,7 @@ def upload_file():
     if not allowed_file(file.filename):
         return jsonify({'error': 'Type de fichier non autorisé'}), 400
     
-    # Réinitialiser l'état
+    # Reset processing status
     global processing_status
     processing_status = {
         'current': 0,
@@ -91,13 +91,13 @@ def upload_file():
         'error': None
     }
     
-    # Sauvegarde du fichier
+    # Save file
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     file.save(filepath)
     
-    # Lancement du traitement en arrière-plan
+    # Start background processing
     thread = Thread(target=background_processing, args=(filepath,))
     thread.start()
     
@@ -105,37 +105,34 @@ def upload_file():
 
 @app.route('/results')
 def results():
-    # Vérification des fichiers existants
+    # Check existing files
     files = {
         'grand_livre': os.path.exists('Grand_Livre_Consolidé.xlsx'),
         'soldes': os.path.exists('soldes_par_feuille.xlsx'),
         'etats_financiers': os.path.exists('Rapports_Financiers.xlsx')
     }
     
-    # Chargement des données si les fichiers existent
+    # Load data if files exist
     soldes_data = None
     rapports_data = None
     
     if files['soldes']:
         try:
             soldes_df = pd.read_excel('soldes_par_feuille.xlsx', sheet_name='Soldes')
-            # Nettoyage des données
             soldes_df = soldes_df.dropna(subset=['Feuille'])
             soldes_df['Total Débit'] = soldes_df['Total Débit'].fillna(0)
             soldes_df['Total Crédit'] = soldes_df['Total Crédit'].fillna(0)
             soldes_df['Solde Final'] = soldes_df['Solde Final'].fillna(0)
             soldes_data = soldes_df.to_dict('records')
         except Exception as e:
-            print(f"Erreur lecture soldes: {str(e)}")
+            app.logger.error(f"Erreur lecture soldes: {str(e)}")
             soldes_data = None
     
     if files['etats_financiers']:
         try:
-            # Charger les deux onglets du rapport financier
             bilan_df = pd.read_excel('Rapports_Financiers.xlsx', sheet_name='Bilan')
             compte_resultat_df = pd.read_excel('Rapports_Financiers.xlsx', sheet_name='Compte de Résultat')
             
-            # Nettoyage des données
             bilan_df = bilan_df.dropna(subset=['Désignation'])
             compte_resultat_df = compte_resultat_df.dropna(subset=['Désignation'])
             
@@ -144,7 +141,7 @@ def results():
                 'compte_resultat': compte_resultat_df.to_dict('records')
             }
         except Exception as e:
-            print(f"Erreur lecture rapports: {str(e)}")
+            app.logger.error(f"Erreur lecture rapports: {str(e)}")
             rapports_data = None
     
     return render_template(
@@ -164,6 +161,14 @@ def download(filename):
     if filename in safe_files and os.path.exists(safe_files[filename]):
         return send_file(safe_files[filename], as_attachment=True)
     return "Fichier non trouvé", 404
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html', message="Page non trouvée"), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('error.html', message="Erreur interne du serveur"), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

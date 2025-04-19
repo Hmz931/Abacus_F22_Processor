@@ -1,180 +1,261 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Résultats - Abacus F22 Processor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .card { margin-bottom: 20px; }
-        .download-btn { width: 100%; }
-        .table-responsive { margin-bottom: 30px; }
-        .section-title { 
-            margin-top: 30px;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #dee2e6;
-        }
-        .montant { text-align: right; }
-        .categorie { font-weight: bold; }
-        .compte-detail { padding-left: 30px !important; }
-    </style>
-</head>
-<body>
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">Résultats du traitement</h1>
-        
-        <!-- Boutons de téléchargement -->
-        <div class="row mb-4">
-            {% if files.grand_livre %}
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Grand Livre Consolidé</h5>
-                        <a href="{{ url_for('download', filename='grand_livre') }}" class="btn btn-primary download-btn">
-                            Télécharger
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-            {% if files.soldes %}
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Balance des Soldes</h5>
-                        <a href="{{ url_for('download', filename='soldes') }}" class="btn btn-primary download-btn">
-                            Télécharger
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-            {% if files.etats_financiers %}
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">États Financiers</h5>
-                        <a href="{{ url_for('download', filename='rapports') }}" class="btn btn-primary download-btn">
-                            Télécharger
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
+{% extends "base.html" %}
 
-        <!-- Affichage des soldes par feuille -->
-        {% if soldes_data %}
-        <h2 class="section-title">Balance des Soldes</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Feuille</th>
-                        <th>Compte</th>
-                        <th>Nom du Compte</th>
-                        <th>Total Débit</th>
-                        <th>Total Crédit</th>
-                        <th>Solde Final</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ligne in soldes_data %}
-                    <tr>
-                        <td>{{ ligne['Feuille'] }}</td>
-                        <td>{{ ligne['Compte'] }}</td>
-                        <td>{{ ligne['Nom du Compte'] }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Total Débit']) }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Total Crédit']) }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Solde Final']) }}</td>
-                        <td>{{ ligne['Type'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+{% block title %}Résultats du Traitement - Abacus F22{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-center mb-4"><i class="bi bi-graph-up me-2"></i>Résultats du Traitement</h2>
+    
+    <!-- Download Cards -->
+    <div class="row g-3 mb-4">
+        {% if files.grand_livre %}
+        <div class="col-md-4">
+            <div class="card financial-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-journal-bookmark fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Grand Livre</h5>
+                    <a href="{{ url_for('download', filename='grand_livre') }}" class="btn btn-primary download-btn mt-2">
+                        <i class="bi bi-download me-2"></i>Télécharger
+                    </a>
+                </div>
+            </div>
         </div>
         {% endif %}
-
-        <!-- Affichage des rapports financiers -->
-        {% if rapports_data %}
-        <h2 class="section-title">États Financiers</h2>
         
-        <!-- Bilan -->
-        <h3 class="mt-4">Bilan Comptable</h3>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Compte</th>
-                        <th>Désignation</th>
-                        <th class="text-end">Montant (CHF)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ligne in rapports_data['bilan'] %}
-                    {% if ligne['Désignation'] and not ligne['Compte'] %}
-                    <tr class="categorie">
-                        <td></td>
-                        <td>{{ ligne['Désignation'] }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
-                    </tr>
-                    {% elif ligne['Désignation'] %}
-                    <tr class="compte-detail">
-                        <td>{{ ligne['Compte'] }}</td>
-                        <td>{{ ligne['Désignation'] }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Compte de résultat -->
-        <h3 class="mt-4">Compte de Résultat</h3>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Compte</th>
-                        <th>Désignation</th>
-                        <th class="text-end">Montant (CHF)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ligne in rapports_data['compte_resultat'] %}
-                    {% if ligne['Désignation'] and not ligne['Compte'] %}
-                    <tr class="categorie">
-                        <td></td>
-                        <td>{{ ligne['Désignation'] }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
-                    </tr>
-                    {% elif ligne['Désignation'] %}
-                    <tr class="compte-detail">
-                        <td>{{ ligne['Compte'] }}</td>
-                        <td>{{ ligne['Désignation'] }}</td>
-                        <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% if files.soldes %}
+        <div class="col-md-4">
+            <div class="card financial-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calculator fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">Balance des Soldes</h5>
+                    <a href="{{ url_for('download', filename='soldes') }}" class="btn btn-primary download-btn mt-2">
+                        <i class="bi bi-download me-2"></i>Télécharger
+                    </a>
+                </div>
+            </div>
         </div>
         {% endif %}
+        
+        {% if files.etats_financiers %}
+        <div class="col-md-4">
+            <div class="card financial-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-bar-graph fs-1 text-primary mb-3"></i>
+                    <h5 class="card-title">États Financiers</h5>
+                    <a href="{{ url_for('download', filename='rapports') }}" class="btn btn-primary download-btn mt-2">
+                        <i class="bi bi-download me-2"></i>Télécharger
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 
-        <div class="text-center mt-4 mb-5">
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Retour à l'accueil
-            </a>
+    <!-- Financial Ratios -->
+    <div class="card financial-card mb-4">
+        <div class="card-header bg-white">
+            <h3 class="h5 mb-0"><i class="bi bi-speedometer2 me-2"></i>Indicateurs Clés</h3>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 border rounded">
+                        <h4 class="h6 text-center">Ratio de Liquidité Générale</h4>
+                        <div class="ratio-value text-center text-primary my-3" id="ratio-liquidite-generale">--</div>
+                        <div class="progress" style="height: 10px;">
+                            <div id="progress-liquidite" class="progress-bar" role="progressbar"></div>
+                        </div>
+                        <p class="small text-muted text-center mt-2 mb-0">
+                            Actifs Circulants / Passifs Courants<br>
+                            <span class="fw-semibold">Seuil conseillé: > 1.5</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 border rounded">
+                        <h4 class="h6 text-center">Ratio de Liquidité Immédiate</h4>
+                        <div class="ratio-value text-center text-primary my-3" id="ratio-liquidite-immediate">--</div>
+                        <div class="progress" style="height: 10px;">
+                            <div id="progress-liquidite-immediate" class="progress-bar" role="progressbar"></div>
+                        </div>
+                        <p class="small text-muted text-center mt-2 mb-0">
+                            (Liquidités + Créances) / Passifs Courants<br>
+                            <span class="fw-semibold">Seuil conseillé: > 0.8</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Icônes Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <!-- Charts -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card financial-card h-100">
+                <div class="card-header bg-white">
+                    <h3 class="h5 mb-0"><i class="bi bi-bar-chart-line me-2"></i>Structure du Bilan</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="bilanChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card financial-card h-100">
+                <div class="card-header bg-white">
+                    <h3 class="h5 mb-0"><i class="bi bi-pie-chart me-2"></i>Composition des Actifs</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="liquiditeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Tables -->
+    {% if soldes_data %}
+    <div class="card financial-card mb-4">
+        <div class="card-header bg-white">
+            <h3 class="h5 mb-0"><i class="bi bi-table me-2"></i>Balance des Soldes</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table financial-table">
+                    <thead>
+                        <tr>
+                            <th>Compte</th>
+                            <th>Désignation</th>
+                            <th class="text-end">Débit</th>
+                            <th class="text-end">Crédit</th>
+                            <th class="text-end">Solde</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in soldes_data %}
+                        <tr>
+                            <td>{{ ligne['Compte'] }}</td>
+                            <td>{{ ligne['Nom du Compte'] }}</td>
+                            <td class="montant">{{ '{:,.2f}'.format(ligne['Total Débit']) }}</td>
+                            <td class="montant">{{ '{:,.2f}'.format(ligne['Total Crédit']) }}</td>
+                            <td class="montant">{{ '{:,.2f}'.format(ligne['Solde Final']) }}</td>
+                            <td>
+                                <span class="badge bg-{% if ligne['Type'] == 'Débiteur' %}success{% else %}warning{% endif %}">
+                                    {{ ligne['Type'] }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if rapports_data %}
+    <div class="card financial-card mb-4">
+        <div class="card-header bg-white">
+            <h3 class="h5 mb-0"><i class="bi bi-file-earmark-text me-2"></i>États Financiers</h3>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs mb-4" id="financialTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="bilan-tab" data-bs-toggle="tab" data-bs-target="#bilan-tab-pane" type="button" role="tab">
+                        Bilan
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="resultat-tab" data-bs-toggle="tab" data-bs-target="#resultat-tab-pane" type="button" role="tab">
+                        Compte de Résultat
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="financialTabsContent">
+                <div class="tab-pane fade show active" id="bilan-tab-pane" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table financial-table">
+                            <thead>
+                                <tr>
+                                    <th>Compte</th>
+                                    <th>Désignation</th>
+                                    <th class="text-end">Montant (CHF)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ligne in rapports_data['bilan'] %}
+                                {% if ligne['Désignation'] and not ligne['Compte'] %}
+                                <tr class="categorie-row">
+                                    <td></td>
+                                    <td>{{ ligne['Désignation'] }}</td>
+                                    <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
+                                </tr>
+                                {% elif ligne['Désignation'] %}
+                                <tr class="detail-row">
+                                    <td>{{ ligne['Compte'] }}</td>
+                                    <td>{{ ligne['Désignation'] }}</td>
+                                    <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="resultat-tab-pane" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table financial-table">
+                            <thead>
+                                <tr>
+                                    <th>Compte</th>
+                                    <th>Désignation</th>
+                                    <th class="text-end">Montant (CHF)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ligne in rapports_data['compte_resultat'] %}
+                                {% if ligne['Désignation'] and not ligne['Compte'] %}
+                                <tr class="categorie-row">
+                                    <td></td>
+                                    <td>{{ ligne['Désignation'] }}</td>
+                                    <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
+                                </tr>
+                                {% elif ligne['Désignation'] %}
+                                <tr class="detail-row">
+                                    <td>{{ ligne['Compte'] }}</td>
+                                    <td>{{ ligne['Désignation'] }}</td>
+                                    <td class="montant">{{ '{:,.2f}'.format(ligne['Montant']) if ligne['Montant'] else '' }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Nouveau traitement
+        </a>
+        <button id="print-btn" class="btn btn-outline-secondary">
+            <i class="bi bi-printer me-2"></i>Imprimer
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/results.js') }}"></script>
+{% endblock %}
